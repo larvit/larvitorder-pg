@@ -1,0 +1,45 @@
+{
+  "name": "larvitorder-pg",
+  "version": "0.1.0",
+  "description": "Order library running on PostgreSQL",
+  "main": "/build/index.js",
+  "scripts": {
+    "build": "npm run lint && tsc",
+    "lint": "tslint ./src/* ./test/*",
+    "test": "npm run lint && npm run build && nyc --reporter=lcov --require ts-node/register tape test/**/*.{ts,js} | tap-spec; nyc report ---reporter=text"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/larvit/larvitorder-pg.git"
+  },
+  "keywords": [
+    "order",
+    "orders"
+  ],
+  "author": "Lilleman <lilleman@larvit.se>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/larvit/larvitorder-pg/issues"
+  },
+  "homepage": "https://github.com/larvit/larvitorder-pg#readme",
+  "dependencies": {
+    "larvitdb-pg": "1.0.1",
+    "larvitdbmigration-pg": "0.2.0",
+    "uuid": "3.3.3"
+  },
+  "devDependencies": {
+    "@types/dotenv": "6.1.1",
+    "@types/node": "12.7.9",
+    "@types/pg": "7.11.2",
+    "@types/tape": "4.2.33",
+    "@types/uuid": "3.4.5",
+    "dotenv": "8.1.0",
+    "larvitutils": "3.2.1",
+    "nyc": "14.1.1",
+    "tap-spec": "5.0.0",
+    "tape": "4.11.0",
+    "ts-node": "8.4.1",
+    "tslint": "5.20.0",
+    "typescript": "3.6.3"
+  }
+}
