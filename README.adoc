@@ -80,12 +80,12 @@ order.save(order).then(result => {
 });
 ----
 
-=== Remove order from database
+=== Remove orders from database
 
 [source,javascript]
 ----
-order.rm('03250c8c-bf88-44d8-a326-b6987d3990d1').then(() => {
-	console.log('Order is gone');
+order.rm(['03250c8c-bf88-44d8-a326-b6987d3990d1']).then(() => {
+	console.log('Orders are gone');
 }).catch(err => {
 	throw err;
 });

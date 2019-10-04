@@ -115,6 +115,29 @@ test('Create a new order with uuid', async t => {
 	t.end();
 });
 
+test('Remove an order', async t => {
+	const orderUuid = '03250c8c-bf88-44d8-a326-b6987d3990d1';
+	await orderLib.rm([orderUuid]);
+
+	const { rows } = await db.query('SELECT * FROM order_orders WHERE uuid = $1', [orderUuid]);
+
+	t.equal(rows.length, 0, 'There should be no rows in the database.');
+	t.end();
+});
+
+test('Remove an order without sending in any UUIDs', async t => {
+	let error;
+
+	try {
+		await orderLib.rm([]);
+	} catch (err) {
+		error = err;
+	}
+
+	t.equal(error instanceof Error, true, 'Should get an error when sending a empty array.');
+	t.end();
+});
+
 test('Cleanup', async t => {
 	db.end();
 	t.end();

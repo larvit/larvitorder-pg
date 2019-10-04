@@ -13,7 +13,7 @@ CREATE TABLE public.order_orders_fields
 	CONSTRAINT "order_orders_fields_orderUuid_fkey" FOREIGN KEY ("orderUuid")
 		REFERENCES public.order_orders (uuid) MATCH SIMPLE
 		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		NOT VALID
 );
 
@@ -28,7 +28,7 @@ CREATE TABLE public.order_orders_rows
 	CONSTRAINT "order_orders_rows_orderUuid_fkey" FOREIGN KEY ("orderUuid")
 		REFERENCES public.order_orders (uuid) MATCH SIMPLE
 		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		NOT VALID
 );
 
@@ -40,7 +40,7 @@ CREATE TABLE public.order_orders_rows_fields
 	CONSTRAINT "order_orders_rows_fields_rowUuid_fkey" FOREIGN KEY ("rowUuid")
 		REFERENCES public.order_orders_rows (uuid) MATCH SIMPLE
 		ON UPDATE NO ACTION
-		ON DELETE NO ACTION
+		ON DELETE CASCADE
 		NOT VALID
 );
 
