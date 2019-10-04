@@ -2,68 +2,16 @@ import { LogInstance } from 'larvitutils';
 import { Db } from 'larvitdb-pg';
 import uuid from 'uuid/v4';
 import { DbMigration } from 'larvitdbmigration-pg';
-
-type GetOrderFields = {
-	[key: string]: GetOrderFieldsFields;
-};
-
-type GetOrderFieldsFields = {
-	[key: string]: string[];
-};
-
-type OrderConstructorOptions = {
-	log: LogInstance;
-	db: Db;
-};
-
-type OrderDataFields = {
-	[key: string]: string | string[];
-};
-
-type OrderDataRow = {
-	[key: string]: string | number | string[] | number[];
-};
-
-type OrderData = {
-	uuid?: string;
-	fields?: OrderDataFields;
-	rows?: OrderDataRow[];
-};
-
-type OrderDataByUuid = {
-	[type: string]: OrderData;
-};
-
-type GetOptions = {
-	uuids?: string[];
-	matchAllFields?: GetOptionsMatchAllFields;
-	returnFields?: string[] | '*';
-	returnRowFields?: string[] | '*';
-	limit?: number;
-	offset?: number;
-};
-
-type GetOptionsMatchAllFields = {
-	[key: string]: string;
-};
-
-type GetOrderRowsFields = {
-	[key: string]: GetOrderRowsFieldsRowFields;
-};
-
-type GetOrderRowsFieldsRowFields = {
-	[key: string]: string[];
-};
-
-type RowUuidsByOrderUuids = {
-	[key: string]: string[];
-};
-
-type WriteableOrderOptions = {
-	uuid: string;
-	fields: OrderDataFields;
-	rows: OrderDataRow[];
-};
+import {
+	OrderConstructorOptions,
+	GetOptions,
+	WriteableOrderOptions,
+	OrderDataByUuid,
+	GetOrderFields,
+	RowUuidsByOrderUuids,
+	GetOrderRowsFields,
+	OrderData,
+} from './models';
 
 const topLogPrefix = 'larvitorder-pg: src/index.ts: ';
 
@@ -169,15 +117,17 @@ class Order {
 			for (let i = 0; rows.length !== i; i++) {
 				const row = rows[i];
 
-				if (result[row.uuid] === undefined) {
-					result[row.uuid] = {};
+				if (result[row.rowUuid] === undefined) {
+					result[row.rowUuid] = {
+						uuid: [row.rowUuid],
+					};
 				}
 
-				if (result[row.uuid][row.name] === undefined) {
-					result[row.uuid][row.name] = [];
+				if (result[row.rowUuid][row.name] === undefined) {
+					result[row.rowUuid][row.name] = [];
 				}
 
-				result[row.uuid][row.name].push(row.value);
+				result[row.rowUuid][row.name].push(row.value);
 			}
 
 			return result;
@@ -188,7 +138,7 @@ class Order {
 		// Construct ordersByUuids object so we can populate the different result sets
 		for (let i = 0; orderUuids.length !== i; i++) {
 			ordersByUuid[orderUuids[i]] = {
-				uuid: orderUuids[i],
+				uuid: [orderUuids[i]],
 			};
 		}
 
@@ -212,29 +162,37 @@ class Order {
 				// Typescript is got damn NOT done yet...
 				// @ts-ignore
 				ordersByUuid[orderUuid].rows.push({
-					uuid: rowUuids[i],
+					uuid: [rowUuids[i]],
 				});
 			}
 		}
 
 		// Set row fields if they exists
 		if (options.returnRowFields) {
-			const result = await getOrderRowsFields(orderRowUuidsPlain, options.returnRowFields);
-			// tslint:disable-next-line
-			console.log('result', result);
-		}
+			const orderRowFields = await getOrderRowsFields(orderRowUuidsPlain, options.returnRowFields);
 
-		// tslint:disable-next-line
-		console.log('ordersByUuid', ordersByUuid);
+			for (const order of Object.values(ordersByUuid)) {
+				if (!Array.isArray(order.rows)) {
+					order.rows = [];
+				}
+				for (let i = 0; order.rows.length !== i; i++) {
+					const row = order.rows[i];
+
+					if (orderRowFields[String(row.uuid)]) {
+						order.rows[i] = Object.assign(row, orderRowFields[String(row.uuid)]);
+					}
+				}
+			}
+		}
 
 		// Construct the return array with complete orders
 		const ordersResult: WriteableOrderOptions[] = [];
 		Object.values(ordersByUuid).forEach(orderData => {
 			const orderEntry = {
-				uuid: orderData.uuid || 'issue',
+				uuid: orderData.uuid ? orderData.uuid : ['issue'],
 				fields: orderData.fields || {},
 				rows: orderData.rows || [],
-			};
+			} as WriteableOrderOptions;
 			ordersResult.push(orderEntry);
 		});
 
@@ -272,7 +230,7 @@ class Order {
 			log.verbose(logPrefix + 'No uuid supplied, creating a brand new (world) order');
 
 			const newOrderData = {
-				uuid: uuid(),
+				uuid: [uuid()],
 				fields: orderData.fields || {},
 				rows: orderData.rows || [],
 			};
@@ -281,7 +239,7 @@ class Order {
 		}
 
 		// Check if this order exists in the database at all
-		const result = await db.query('SELECT * FROM order_orders WHERE uuid = $1', [orderData.uuid]);
+		const result = await db.query('SELECT * FROM order_orders WHERE uuid = $1', [String(orderData.uuid)]);
 		if (result.rows.length === 0) {
 			log.verbose(logPrefix + 'Uuid supplied, but no order exists in database, creating a brand new (world) order');
 
@@ -294,6 +252,8 @@ class Order {
 			return this.create(newOrderData);
 		}
 
+		throw new Error('Not implemented');
+
 		// Lock database
 
 		// Fetch the current order
@@ -304,7 +264,7 @@ class Order {
 
 		// todo: Make sure this is correct
 		// @ts-ignore
-		return orderData;
+		// return orderData;
 	}
 
 	private async create(orderData: WriteableOrderOptions): Promise<WriteableOrderOptions> {
@@ -315,23 +275,26 @@ class Order {
 
 		await this.migrate();
 
-		await db.query('INSERT INTO order_orders (uuid) VALUES($1);', [orderData.uuid]);
+		await db.query('INSERT INTO order_orders (uuid) VALUES($1);', [String(orderData.uuid)]);
 
 		let fieldsSql = 'INSERT INTO order_orders_fields ("orderUuid", name, value) VALUES';
 		const fieldsDbFields = [];
 		let counter = 1;
-		for (const [ key, value ] of Object.entries(orderData.fields)) {
-			fieldsSql += '($' + String(counter) + ',';
-			counter ++;
-			fieldsDbFields.push(orderData.uuid);
+		for (const [ key, values ] of Object.entries(orderData.fields)) {
+			for (let i = 0; values.length !== i; i++) {
+				const value = values[i];
+				fieldsSql += '($' + String(counter) + ',';
+				counter ++;
+				fieldsDbFields.push(String(orderData.uuid));
 
-			fieldsSql += '$' + String(counter) + ',';
-			counter ++;
-			fieldsDbFields.push(key);
+				fieldsSql += '$' + String(counter) + ',';
+				counter ++;
+				fieldsDbFields.push(key);
 
-			fieldsSql += '$' + String(counter) + '),';
-			counter ++;
-			fieldsDbFields.push(value);
+				fieldsSql += '$' + String(counter) + '),';
+				counter ++;
+				fieldsDbFields.push(value);
+			}
 		}
 		if (fieldsDbFields.length !== 0) {
 			fieldsSql = fieldsSql.substring(0, fieldsSql.length - 1 ) + ';';
@@ -341,27 +304,30 @@ class Order {
 		for (let i = 0; orderData.rows.length !== i; i++) {
 			const row = orderData.rows[i];
 			if (!row.uuid) {
-				row.uuid = uuid();
+				row.uuid = [uuid()];
 			}
-			await db.query('INSERT INTO order_orders_rows (uuid, "orderUuid") VALUES($1,$2);', [row.uuid, orderData.uuid]);
+			await db.query('INSERT INTO order_orders_rows (uuid, "orderUuid") VALUES($1,$2);', [String(row.uuid), String(orderData.uuid)]);
 			let rowFieldsSql = 'INSERT INTO order_orders_rows_fields ("rowUuid", name, value) VALUES';
 			const rowFieldsDbFields = [];
 			let subCounter = 1;
-			for (const [ key, value ] of Object.entries(row)) {
+			for (const [ key, values ] of Object.entries(row)) {
 				if (key === 'uuid') {
 					continue;
 				}
-				rowFieldsSql += '($' + String(subCounter) + ',';
-				subCounter ++;
-				rowFieldsDbFields.push(row.uuid);
+				for (let i2 = 0; values.length !== i2; i2++) {
+					const value = values[i2];
+					rowFieldsSql += '($' + String(subCounter) + ',';
+					subCounter ++;
+					rowFieldsDbFields.push(String(row.uuid));
 
-				rowFieldsSql += '$' + String(subCounter) + ',';
-				subCounter ++;
-				rowFieldsDbFields.push(key);
+					rowFieldsSql += '$' + String(subCounter) + ',';
+					subCounter ++;
+					rowFieldsDbFields.push(key);
 
-				rowFieldsSql += '$' + String(subCounter) + '),';
-				subCounter ++;
-				rowFieldsDbFields.push(value);
+					rowFieldsSql += '$' + String(subCounter) + '),';
+					subCounter ++;
+					rowFieldsDbFields.push(value);
+				}
 			}
 			if (rowFieldsDbFields.length !== 0) {
 				rowFieldsSql = rowFieldsSql.substring(0, rowFieldsSql.length - 1);
@@ -369,7 +335,7 @@ class Order {
 			}
 		}
 
-		const newOrdersFromDb = await this.get({ uuids: [orderData.uuid], returnFields: '*', returnRowFields: '*' });
+		const newOrdersFromDb = await this.get({ uuids: orderData.uuid, returnFields: '*', returnRowFields: '*' });
 
 		return newOrdersFromDb[0];
 	}
