@@ -125,11 +125,12 @@ test('Remove an order', async t => {
 	t.end();
 });
 
-test('Remove an order without sending in any UUIDs', async t => {
+test('Remove an order and not sending an array', async t => {
 	let error;
 
 	try {
-		await orderLib.rm([]);
+		// @ts-ignore
+		await orderLib.rm('lasse');
 	} catch (err) {
 		error = err;
 	}

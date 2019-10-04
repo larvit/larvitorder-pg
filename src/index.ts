@@ -226,9 +226,9 @@ class Order {
 
 		log.debug(logPrefix + 'Removing orders');
 
-		if (!Array.isArray(uuids) || uuids.length === 0) {
-			const err = new Error('Uuids needs to be an array and/or have at least one member.');
-			log.warn(logPrefix + err.message);
+		if (!Array.isArray(uuids)) {
+			const err = new Error('Uuids needs to be an array.');
+			log.error(logPrefix + err.message);
 			throw err;
 		}
 
