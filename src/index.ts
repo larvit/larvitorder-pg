@@ -261,6 +261,29 @@ class Order {
 		this.migrated = true;
 	}
 
+	public async rm(uuids: string[]): Promise<void> {
+		const logPrefix = topLogPrefix + 'rm() - ';
+		const { log, db } = this;
+		await this.migrate();
+
+		log.debug(logPrefix + 'Removing orders');
+
+		if (!Array.isArray(uuids) || uuids.length === 0) {
+			const err = new Error('Uuids needs to be an array and/or have at least one member.');
+			log.warn(logPrefix + err.message);
+			throw err;
+		}
+
+		let sql = 'DELETE FROM order_orders WHERE 1 = 1';
+		const dbFields = [];
+
+		log.debug(logPrefix + 'Deleting order with uuids: ' + JSON.stringify(uuids));
+		sql += ' AND uuid = ANY($1)';
+		dbFields.push(uuids);
+
+		await db.query(sql, dbFields);
+	}
+
 	public async save(orderData: OrderData): Promise<WriteableOrderOptions> {
 		const logPrefix = topLogPrefix + 'save() - ';
 		const { log, db } = this;
