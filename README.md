@@ -1,13 +1,12 @@
-= Larvit order library running on PostgreSQL
+# Larvit order library running on PostgreSQL
 
 Generic order module for nodejs.
 
 order data structure:
 
-[source,SQL]
-----
+```json
 {
-	"uuid": "string",
+	"uuid": ["string"],
 	"fields": {
 		"field1": [
 			"value1",
@@ -19,55 +18,53 @@ order data structure:
 	},
 	"rows": [
 		{
-			"uuid": "string (This field is special)",
-			"field1": [394],
-			"field2": ["nisse", 20]
+			"uuid": ["string"],
+			"field1": ["394"],
+			"field2": ["nisse", "20"]
 		}
 	]
 }
-----
+```
 
-== Installation
+## Installation
 
 `npm i larvitorder-pg`
 
-== Usage
+## Usage
 
-=== Initialize and requirements
+### Initialize and requirements
 
 First you need to set up a db connection. Larvitdb-pg is used here, but any compatible library will suffice.
 
-[source,javascript]
-----
+```javascript
 import { Db } from 'larvitdb-pg';
 import { Order } from 'larvitorder-pg';
 
 const db = new Db(...); // Se documentation on https://github.com/larvit/larvitdb-pg
 const order = new Order({ db });
-----
+```
 
-=== Save an new order
+### Save an new order
 
 Both create and update an existing order with the same call.
 
 To create a new order, supply a non existing uuid or omit it completley, then a new will be generated.
 
-[source,javascript]
-----
+```javascript
 const order = {
-	uuid: '03250c8c-bf88-44d8-a326-b6987d3990d1',
+	uuid: ['03250c8c-bf88-44d8-a326-b6987d3990d1'],
 	fields: {
-		firstname: 'Günter',
+		firstname: ['Günter'],
 		lastname: ['Edelweiss', 'Schloffs'],
 	},
 	rows: [
 		{
-			price: 399,
-			name: 'Screw',
+			price: ['399'],
+			name: ['Screw'],
 		},
 		{
-			price: 34,
-			name: 'teh_foo',
+			price: ['34'],
+			name: ['teh_foo'],
 			tags: ['foo', 'bar'],
 		},
 	],
@@ -78,23 +75,21 @@ order.save(order).then(result => {
 }).catch(err => {
 	throw err;
 });
-----
+```
 
-=== Remove orders from database
+### Remove orders from database
 
-[source,javascript]
-----
+```javascript
 order.rm(['03250c8c-bf88-44d8-a326-b6987d3990d1']).then(() => {
 	console.log('Orders are gone');
 }).catch(err => {
 	throw err;
 });
-----
+```
 
-=== Load order from database
+### Load order from database
 
-[source,javascript]
-----
+```javascript
 order.get({
 	uuids: ['03250c8c-bf88-44d8-a326-b6987d3990d1'], // Only return orders with these uuids
 	matchAllFields: {firstname: 'Abraham', lastname: 'Lincoln'}, // Only return orders that have both the fields firstname and lastname that matches
@@ -108,4 +103,4 @@ order.get({
 }).catch(err => {
 	throw err;
 });
-----
+```
