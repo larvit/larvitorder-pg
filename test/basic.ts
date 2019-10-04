@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { Log } from 'larvitutils';
 import { Db } from 'larvitdb-pg';
 import { Order } from '../src/index';
+import { OrderData } from '../src/models';
 
 dotenv.config();
 
@@ -39,56 +40,78 @@ if (process.env.CLEAR_DB === 'true') {
 }
 
 test('Create a new order without uuid', async t => {
-	const order = {
+	const order: OrderData = {
 		fields: {
-			firstname: 'Günter',
+			firstname: ['Günter'],
 			lastname: ['Edelweiss', 'Schloffs'],
 		},
 		rows: [
 			{
-				price: 399,
-				name: 'Screw',
+				price: ['399'],
+				name: ['Screw'],
 			},
 			{
-				price: 34,
-				name: 'teh_foo',
-				/* tags: ['foo', 'bar'], todo: fix me!!!!! */
+				price: ['34'],
+				name: ['teh_foo'],
+				tags: ['foo', 'bar'],
 			},
 		],
 	};
 
 	const result = await orderLib.save(order);
 
-	t.equal(typeof result.uuid, 'string', 'The uuid should now be a string');
+	t.equal(typeof result.uuid[0], 'string', 'The uuid should now be an array with one string');
+	t.equal(String(Object.keys(result.fields)), 'firstname,lastname', 'Fields should be firstname and lastname');
 
 	t.end();
 });
 
 test('Create a new order with uuid', async t => {
-	const order = {
-		uuid: '03250c8c-bf88-44d8-a326-b6987d3990d1',
+	t.plan(10);
+
+	const order: OrderData = {
+		uuid: ['03250c8c-bf88-44d8-a326-b6987d3990d1'],
 		fields: {
-			firstname: 'Günter',
+			firstname: ['Günter'],
 			lastname: ['Edelweiss', 'Schloffs'],
 		},
 		rows: [
 			{
-				uuid: '0bff939c-c489-44ce-815f-2a2506efeff3',
-				price: 399,
-				name: 'Screw',
+				uuid: ['0bff939c-c489-44ce-815f-2a2506efeff3'],
+				price: ['399'],
+				name: ['Screw'],
 			},
 			{
-				uuid: '7e816ee1-0a37-4b77-b415-70d754703696',
-				price: 34,
-				name: 'teh_foo',
-				/* tags: ['foo', 'bar'], todo: fix me!!!!! */
+				uuid: ['7e816ee1-0a37-4b77-b415-70d754703696'],
+				price: ['34'],
+				name: ['teh_foo'],
+				tags: ['foo', 'bar'],
 			},
 		],
 	};
 
 	const result = await orderLib.save(order);
 
-	t.equal(JSON.stringify(order), JSON.stringify(result), 'The order object to be saved should be identical to the actual saved result');
+	t.equal(String(result.uuid), String(order.uuid), 'The uuid on the input and output order should match');
+	t.equal(Object.keys(result.fields).length, 2, 'Exactly 2 fields should be saved');
+	t.equal(result.fields.firstname[0], 'Günter', 'The firstname should be an array of one Günter');
+	t.equal(result.fields.lastname.includes('Schloffs'), true, 'The lastname should contain an entry of "Schloffs"');
+	t.equal(result.rows.length, 2, 'Two rows should be saved');
+
+	for (let i = 0; result.rows.length !== i; i++) {
+		const row = result.rows[i];
+		if (row.uuid[0] === '0bff939c-c489-44ce-815f-2a2506efeff3') {
+			t.equal(String(row.price), '399', 'Row price should be 399 on a specific row');
+			t.equal(String(row.name), 'Screw', 'The name on a specific row should be "Screw"');
+		} else if (row.uuid[0] === '7e816ee1-0a37-4b77-b415-70d754703696') {
+			t.equal(Object.keys(row).length, 4, 'On another specific row there should be 4 keys');
+			t.equal(row.tags.length, 2, 'Two tags should exist on a specific row');
+			t.equal(row.tags.includes('foo'), true, 'One of them should be foo');
+		} else {
+			throw new Error('Unexpected row');
+		}
+	}
+
 	t.end();
 });
 
