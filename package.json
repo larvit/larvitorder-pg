@@ -4,9 +4,9 @@
   "description": "Order library running on PostgreSQL",
   "main": "/build/index.js",
   "scripts": {
-    "build": "npm run lint && tsc",
+    "build": "npm run lint && tsc -p ./tsconfig.json",
     "lint": "tslint ./src/* ./test/*",
-    "test": "npm run lint && npm run build && nyc --reporter=lcov --require ts-node/register tape test/**/*.{ts,js} | tap-spec; nyc report ---reporter=text"
+    "test": "npm run build && nyc --reporter=lcov --require ts-node/register tape test/**/*.{ts,js} | tap-spec; nyc report ---reporter=text"
   },
   "repository": {
     "type": "git",
@@ -41,5 +41,13 @@
     "ts-node": "8.4.1",
     "tslint": "5.20.0",
     "typescript": "3.6.3"
+  },
+  "nyc": {
+    "include": [
+      "src/**/*.ts"
+    ],
+    "extension": [
+      ".ts"
+    ]
   }
 }
