@@ -83,7 +83,7 @@ class Order {
 		const ordersByUuid: OrderDataByUuid = {};
 		await this.migrate();
 
-		options = options = {};
+		options = options || {};
 
 		// Get all order uuids to fetch data from
 		async function getOrderUuids(uuidOptions: GetOptions): Promise<string[]> {
@@ -92,7 +92,7 @@ class Order {
 
 			if (Array.isArray(uuidOptions.uuids)) {
 				log.debug(logPrefix + 'Selecting on uuids: ' + JSON.stringify(uuidOptions.uuids));
-				sql += ' AND uuid = ANY ?';
+				sql += ' AND uuid = ANY($1)';
 				dbFields.push(uuidOptions.uuids);
 			}
 
@@ -154,8 +154,8 @@ class Order {
 			const dbFields = [rowUuids];
 			let sql = /*sql*/`
 				SELECT *
-				FROM order_orders_rows_fields rf
-				WHERE uuid = ANY($1)
+				FROM order_orders_rows_fields
+				WHERE "rowUuid" = ANY($1)
 			`;
 
 			if (fields !== '*') {
@@ -203,9 +203,11 @@ class Order {
 		const orderRowUuids = await getOrderRowsUuids(orderUuids);
 
 		// Construct all rows on the orders in the result object
+		const orderRowUuidsPlain = [];
 		for (const [ orderUuid, rowUuids ] of Object.entries(orderRowUuids)) {
 			ordersByUuid[orderUuid].rows = [];
 			for (let i = 0; rowUuids.length !== i; i++) {
+				orderRowUuidsPlain.push(rowUuids[i]);
 				// Typescript is got damn NOT done yet...
 				// @ts-ignore
 				ordersByUuid[orderUuid].rows.push({
@@ -215,7 +217,14 @@ class Order {
 		}
 
 		// Set row fields if they exists
-
+		if (options.returnRowFields) {
+			const result = await getOrderRowsFields(orderRowUuidsPlain, options.returnRowFields);
+			// tslint:disable-next-line
+			console.log('result', result);
+		} else {
+			// tslint:disable-next-line
+			console.log('options', options);
+		}
 
 		// Construct the return array with complete orders
 		const ordersResult: WriteableOrderOptions[] = [];
@@ -251,7 +260,7 @@ class Order {
 		this.migrated = true;
 	}
 
-	public async save(orderData: OrderData): Promise<OrderData> {
+	public async save(orderData: OrderData): Promise<WriteableOrderOptions> {
 		const logPrefix = topLogPrefix + 'save() - ';
 		const { log } = this;
 		await this.migrate();
@@ -278,6 +287,8 @@ class Order {
 
 		// Unlock database
 
+		// todo: Make sure this is correct
+		// @ts-ignore
 		return orderData;
 	}
 
@@ -343,7 +354,7 @@ class Order {
 			}
 		}
 
-		const newOrdersFromDb = await this.get({ uuids: [orderData.uuid]});
+		const newOrdersFromDb = await this.get({ uuids: [orderData.uuid], returnFields: '*', returnRowFields: '*' });
 
 		return newOrdersFromDb[0];
 	}
