@@ -145,6 +145,7 @@ class Order {
 
 				result[row.orderUuid].push(row.uuid);
 			}
+
 			return result;
 		}
 
@@ -221,10 +222,10 @@ class Order {
 			const result = await getOrderRowsFields(orderRowUuidsPlain, options.returnRowFields);
 			// tslint:disable-next-line
 			console.log('result', result);
-		} else {
-			// tslint:disable-next-line
-			console.log('options', options);
 		}
+
+		// tslint:disable-next-line
+		console.log('ordersByUuid', ordersByUuid);
 
 		// Construct the return array with complete orders
 		const ordersResult: WriteableOrderOptions[] = [];
@@ -262,7 +263,7 @@ class Order {
 
 	public async save(orderData: OrderData): Promise<WriteableOrderOptions> {
 		const logPrefix = topLogPrefix + 'save() - ';
-		const { log } = this;
+		const { log, db } = this;
 		await this.migrate();
 
 		log.debug(logPrefix + 'Saving order');
@@ -272,6 +273,20 @@ class Order {
 
 			const newOrderData = {
 				uuid: uuid(),
+				fields: orderData.fields || {},
+				rows: orderData.rows || [],
+			};
+
+			return this.create(newOrderData);
+		}
+
+		// Check if this order exists in the database at all
+		const result = await db.query('SELECT * FROM order_orders WHERE uuid = $1', [orderData.uuid]);
+		if (result.rows.length === 0) {
+			log.verbose(logPrefix + 'Uuid supplied, but no order exists in database, creating a brand new (world) order');
+
+			const newOrderData = {
+				uuid: orderData.uuid,
 				fields: orderData.fields || {},
 				rows: orderData.rows || [],
 			};
