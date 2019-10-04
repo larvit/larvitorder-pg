@@ -273,21 +273,32 @@ class Order {
 			};
 
 			return this.create(newOrderData);
+		} else {
+			log.info(logPrefix + 'Order exists, modify! IMPORTANT!!! This code is inefficient as ****, please fix!');
+			// UGLY CODE! Please fix me!
+
+			await this.rm(orderData.uuid);
+
+			const newOrderData = {
+				uuid: orderData.uuid,
+				fields: orderData.fields || {},
+				rows: orderData.rows || [],
+			};
+
+			return this.create(newOrderData);
+
+			// How it should be done:
+
+			// Lock database
+
+			// Fetch the current order
+
+			// Modify, save
+
+			// Unlock database
+
+			// return result;
 		}
-
-		throw new Error('Not implemented');
-
-		// Lock database
-
-		// Fetch the current order
-
-		//
-
-		// Unlock database
-
-		// todo: Make sure this is correct
-		// @ts-ignore
-		// return orderData;
 	}
 
 	private async create(orderData: WriteableOrderOptions): Promise<WriteableOrderOptions> {

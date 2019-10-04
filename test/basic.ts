@@ -138,6 +138,64 @@ test('Remove an order without sending in any UUIDs', async t => {
 	t.end();
 });
 
+test('Modify order', async t => {
+	t.plan(8);
+
+	const order: OrderData = {
+		uuid: ['9beba2a0-1d5d-49a5-acab-af3aa9ead6ef'],
+		fields: {
+			firstname: ['Kurt'],
+		},
+		rows: [
+			{
+				price: ['199'],
+				sku: ['9923kfffs'],
+			},
+			{
+				foo: ['bar'],
+			},
+		],
+	};
+
+	const result1 = await orderLib.save(order);
+
+	result1.fields.deliveryAddress = ['Gökbacken 99'];
+	for (let i = 0; result1.rows.length !== i; i++) {
+		const row = result1.rows[i];
+
+		if (String(row.foo) === 'bar') {
+			result1.rows.splice(i, 1);
+			break;
+		}
+	}
+	result1.rows.push({
+		tomte: ['kanske'],
+	});
+
+	const result2 = await orderLib.save(result1);
+
+	t.equal(String(result2.uuid), '9beba2a0-1d5d-49a5-acab-af3aa9ead6ef', 'The uuid should remain the same');
+	t.equal(String(result2.fields.firstname), 'Kurt', 'Kurt should prevail');
+	t.equal(String(result2.fields.deliveryAddress), 'Gökbacken 99', 'Gökbacken 99 should be added');
+	t.equal(result2.rows.length, 2, 'The amount of remaining rows should be 2');
+
+	for (let i = 0; result2.rows.length !== i; i++) {
+		const row = result2.rows[i];
+
+		if (row.sku) {
+			t.equal(String(row.price), '199', 'Price for the sku row should be 199');
+			t.equal(Object.keys(row).length, 3, 'uuid, price and sku should be the only fields');
+		} else if (row.tomte) {
+			t.equal(Object.keys(row).length, 2, 'uuid and tomte should be the only fields');
+			t.equal(String(row.tomte), 'kanske', 'Kanske is good enough');
+		} else {
+			throw new Error('This row should not exist! row: "' + JSON.stringify(row) + '"');
+		}
+	}
+
+	t.end();
+});
+
 test('Cleanup', async t => {
 	db.end();
 	t.end();
