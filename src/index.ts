@@ -3,14 +3,19 @@ import { Db } from 'larvitdb-pg';
 import uuid from 'uuid/v4';
 import { DbMigration } from 'larvitdbmigration-pg';
 import {
-	OrderConstructorOptions,
-	GetOptions,
-	WriteableOrderOptions,
-	OrderDataByUuid,
 	GetOrderFields,
-	RowUuidsByOrderUuids,
-	GetOrderRowsFields,
+	GetOrderFieldsFields,
+	OrderConstructorOptions,
+	OrderDataFields,
+	OrderDataRow,
 	OrderData,
+	OrderDataByUuid,
+	GetOptions,
+	GetOptionsMatchAllFields,
+	GetOrderRowsFields,
+	GetOrderRowsFieldsRowFields,
+	RowUuidsByOrderUuids,
+	WriteableOrderOptions,
 } from './models';
 
 const topLogPrefix = 'larvitorder-pg: src/index.ts: ';
@@ -375,4 +380,20 @@ class Order {
 	}
 }
 
-export { Order };
+export {
+	Order,
+
+	GetOrderFields,
+	GetOrderFieldsFields,
+	OrderConstructorOptions,
+	OrderDataFields,
+	OrderDataRow,
+	OrderData,
+	OrderDataByUuid,
+	GetOptions,
+	GetOptionsMatchAllFields,
+	GetOrderRowsFields,
+	GetOrderRowsFieldsRowFields,
+	RowUuidsByOrderUuids,
+	WriteableOrderOptions,
+};
