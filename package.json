@@ -33,7 +33,7 @@
     "@types/pg": "7.11.2",
     "@types/tape": "4.2.33",
     "@types/uuid": "3.4.5",
-    "dotenv": "8.1.0",
+    "dotenv": "8.2.0",
     "larvitutils": "3.2.1",
     "nyc": "14.1.1",
     "tap-spec": "5.0.0",
