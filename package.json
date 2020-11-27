@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/larvit/larvitorder-pg#readme",
   "dependencies": {
-    "larvitdb-pg": "1.0.4",
+    "larvitdb-pg": "1.0.6",
     "larvitdbmigration-pg": "0.2.1",
     "uuid": "3.4.0"
   },
