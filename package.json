@@ -34,7 +34,7 @@
     "@types/tape": "4.2.34",
     "@types/uuid": "3.4.8",
     "dotenv": "8.2.0",
-    "larvitutils": "3.2.1",
+    "larvitutils": "3.2.3",
     "nyc": "14.1.1",
     "tap-spec": "5.0.0",
     "tape": "4.13.2",
