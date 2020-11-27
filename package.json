@@ -24,7 +24,7 @@
   "homepage": "https://github.com/larvit/larvitorder-pg#readme",
   "dependencies": {
     "larvitdb-pg": "1.0.4",
-    "larvitdbmigration-pg": "0.2.1",
+    "larvitdbmigration-pg": "0.2.3",
     "uuid": "3.4.0"
   },
   "devDependencies": {
