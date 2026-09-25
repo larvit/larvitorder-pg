@@ -30,7 +30,7 @@
   "devDependencies": {
     "@types/dotenv": "6.1.1",
     "@types/node": "12.20.55",
-    "@types/pg": "7.14.3",
+    "@types/pg": "8.23.1",
     "@types/tape": "4.13.4",
     "@types/uuid": "3.4.8",
     "dotenv": "8.2.0",
