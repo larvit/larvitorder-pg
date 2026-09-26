@@ -28,12 +28,12 @@
     "uuid": "3.4.0"
   },
   "devDependencies": {
-    "@types/dotenv": "6.1.1",
+    "@types/dotenv": "8.2.3",
     "@types/node": "12.20.55",
     "@types/pg": "7.14.3",
     "@types/tape": "4.13.4",
     "@types/uuid": "3.4.8",
-    "dotenv": "8.2.0",
+    "dotenv": "8.6.0",
     "larvitutils": "3.2.1",
     "nyc": "14.1.1",
     "tap-spec": "5.0.0",
