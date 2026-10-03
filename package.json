@@ -32,7 +32,7 @@
     "@types/node": "12.20.55",
     "@types/pg": "7.14.3",
     "@types/tape": "4.13.4",
-    "@types/uuid": "3.4.8",
+    "@types/uuid": "11.0.0",
     "dotenv": "8.2.0",
     "larvitutils": "3.2.1",
     "nyc": "14.1.1",
